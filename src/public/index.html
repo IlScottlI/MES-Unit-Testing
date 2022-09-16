@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html style="overflow:auto">
+
+<head>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="css/vuetify.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <script src="js/sweetalert2.js"></script>
+  <script src="http://localhost:8098"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+  <div id="app">
+    <v-app id="inspire">
+      <v-app-bar app>
+        <v-container fulid class="py-0 fill-height">
+          <v-img src="img/logo.png" contain height="50"></v-img>
+        </v-container>
+        <v-progress-linear :active="loading" :indeterminate="loading" absolute bottom color="deep-orange accent-5">
+        </v-progress-linear>
+        <v-spacer></v-spacer>
+      </v-app-bar>
+
+
+      <v-main class="grey lighten-3">
+        <v-container>
+          <v-row>
+            <v-col cols="3">
+              <v-sheet rounded="lg">
+                <v-list color="transparent">
+                  <v-list-item>
+                    <v-text-field active-class="deep-orange--text" v-model="tracking_number" :rules="requiredRules"
+                      label="Tracking Number" required>
+                    </v-text-field>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-text-field active-class="deep-orange--text" v-model="server_name" :rules="requiredRules"
+                      label="Server Name" required>
+                    </v-text-field>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-text-field active-class="deep-orange--text" v-model="badge_id" :rules="requiredRules"
+                      label="Badge ID" required>
+                    </v-text-field>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-switch active-class="deep-orange--text" v-model="headless" :label="`Headless Mode`"
+                      color="orange darken-3"></v-switch>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-combobox v-model="tests_to_run" :items="items" label="Test Cases" multiple small-chips dense
+                      clearable></v-combobox>
+                  </v-list-item>
+                  <v-list-item link color="grey lighten-4">
+                    <v-list-item-content>
+                      <div class="text-center">
+                        <v-btn v-if="!loading" dark color="deep-orange accent-5" @click="loading = true">
+                          Run Selected Test{{tests_to_run.length>1?'s':''}}
+                        </v-btn>
+                        <v-btn v-else>
+                          <v-progress-circular indeterminate color="deep-orange accent-5"></v-progress-circular>
+                        </v-btn>
+                      </div>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+                <span class="d-flex align-end flex-column pb-2" style="margin-top: -40px;" v-if="!loading">
+                  <v-btn icon @click="loadHistory()">
+                    <v-icon>mdi-reload</v-icon>
+                  </v-btn>
+                </span>
+                <v-list two-line max-height="43.5vh" class="overflow-auto">
+                  <v-list-item-group v-model="selected" active-class="deep-orange--text">
+                    <template v-for="(item, index) in history">
+                      <v-list-item :key="item.title">
+                        <template v-slot:default="{ active }">
+                          <v-list-item-content>
+                            <v-list-item-title>
+                              {{formatDate(item.start_time,'LLL')}}
+                            </v-list-item-title>
+
+                            <v-list-item-subtitle class="text--deep-orange" v-text="item.id"></v-list-item-subtitle>
+
+                            <v-list-item-subtitle v-text="item.id"></v-list-item-subtitle>
+                          </v-list-item-content>
+
+                          <v-list-item-action>
+                            <v-list-item-action-text>
+                              <v-icon small>mdi-clock-time-eleven-outline</v-icon>
+                              {{diff(item.end_time, item.start_time)}}
+                            </v-list-item-action-text>
+
+                            <v-icon v-if="!active" color="grey lighten-1" @click="deleteHistory(item)">
+                              mdi-trash-can-outline
+                            </v-icon>
+
+                            <v-icon v-else color="yellow darken-3" @click="deleteHistory(item)">
+                              mdi-trash-can
+                            </v-icon>
+                          </v-list-item-action>
+                        </template>
+                      </v-list-item>
+
+                      <v-divider v-if="index < history.length - 1" :key="index"></v-divider>
+                    </template>
+                  </v-list-item-group>
+                </v-list>
+              </v-sheet>
+            </v-col>
+
+            <v-col>
+              <v-sheet min-height="90vh" max-height="90vh" class="overflow-y-auto overflow-x-hidden">
+                <v-row>
+                  <v-col>
+                    <v-item-group>
+                      <v-container>
+                        <v-row v-if="selected_test">
+                          <v-col v-for="(val,key) in selected_test.test_results" :key="key" class="d-flex child-flex"
+                            cols="3">
+                            <v-list>
+                              <v-list-item-group>
+                                <v-dialog v-model="val.diaglog">
+                                  <template v-slot:activator="{ on, attrs }">
+                                    <v-list-item v-on="on">
+                                      <v-list-item-content>
+                                        <v-list-item-title>{{val.step}} - {{val.test_description}}</v-list-item-title>
+                                        <v-list-item-subtitle class="text--orange">{{val.test_case}}</v-list-item-subtitle>
+                                      </v-list-item-content>
+                                      <v-list-item-action-text :style="val.result == 'PASS'?'color:green':'color:red'">
+                                        {{val.result}}
+                                        <v-icon v-if="val.result == 'PASS'" color="green">mdi-thumb-up</v-icon>
+                                        <v-icon v-else color="red">mdi-thumb-down</v-icon>
+                                      </v-list-item-action-text>
+                                    </v-list-item>
+                                    <v-img style="cursor: pointer;" v-bind="attrs" v-on="on"
+                                      :src="`../../${val.screenshot_path}`" :lazy-src="`../../${val.screenshot_path}`"
+                                      class="grey lighten-2" contain width="300">
+                                      <template v-slot:placeholder>
+                                        <v-row class="fill-height ma-0" align="center" justify="center">
+                                          <v-progress-circular indeterminate color="grey lighten-5">
+                                          </v-progress-circular>
+                                        </v-row>
+                                      </template>
+                                    </v-img>
+                                  </template>
+                                  <v-card>
+                                    <v-card-title>
+                                      <ul>
+                                        <li>{{val.test_category}} - {{val.test_description}}</li>
+                                        <ul>
+                                          <li>{{val.step}}</li>
+                                        </ul>
+                                      </ul>
+                                    </v-card-title>
+                                    <v-card-text>
+                                      <v-img :src="`../../${val.screenshot_path}`"
+                                        :lazy-src="`../../${val.screenshot_path}`" class="grey lighten-2" contain
+                                        height="70vh">
+                                    </v-card-text>
+                                    <v-card-actions>
+                                      <v-spacer></v-spacer>
+                                      <v-btn color="green darken-1" text @click="val.diaglog = false">
+                                        CLOSE
+                                      </v-btn>
+                                    </v-card-actions>
+                                  </v-card>
+                                </v-dialog>
+                              </v-list-item-group>
+                            </v-list>
+                          </v-col>
+                        </v-row>
+                      </v-container>
+                    </v-item-group>
+                  </v-col>
+                </v-row>
+              </v-sheet>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-main>
+    </v-app>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/moment-duration-format/2.3.2/moment-duration-format.min.js"></script>
+  <script>
+
+    const base_url = 'http://127.0.0.1:3000';
+
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+      data() {
+        return {
+          dialog: false,
+          headless: true,
+          delete_item: null,
+          selected: [],
+          selected_test: null,
+          loading: false,
+          tracking_number: '1362946',
+          server_name: 'naaccscdatw08.oshkoshglobal.com',
+          badge_id: 'U289975',
+          requiredRules: [
+            v => !!v || 'Required Field',
+          ],
+          history: [],
+          tests_to_run: [],
+          test_scripts: [],
+          firstRun: true,
+        }
+      },
+
+      mounted() {
+        this.loadHistory();
+        this.loadTestScripts();
+      },
+
+      computed: {
+        items() {
+          return this.test_scripts.map(e => e.prop);
+        }
+      },
+
+      methods: {
+        loadHistory: async function () {
+          let res = await fetch(`${base_url}/read_history`).then(r => r.json()).catch((e) => {
+            Swal.fire({
+              title: 'Error',
+              text: e,
+              icon: 'error',
+              confirmButtonText: 'Okay'
+            })
+          });
+          this.history = res;
+        },
+        loadTestScripts: async function () {
+          let res = await fetch(`${base_url}/read_test_scripts`).then(r => r.json()).catch((e) => {
+            Swal.fire({
+              title: 'Error',
+              text: e,
+              icon: 'error',
+              confirmButtonText: 'Okay'
+            })
+          });
+          if (this.firstRun) {
+            this.tests_to_run = res.map(e => e.prop);
+            this.firstRun = false;
+          }
+          this.test_scripts = res;
+        },
+        runTest: async function () {
+          this.loading = true;
+          let res = await fetch(`${base_url}/?tracking_number=${this.tracking_number}&server_name=${this.server_name}&badge_id=${this.badge_id}${this.headless ? '&headless=' + this.headless : ''}&tests_to_run=${this.tests_to_run.join(',')}`).then(r => r.json()).catch((e) => {
+            Swal.fire({
+              title: 'Error',
+              text: e,
+              icon: 'error',
+              confirmButtonText: 'Okay'
+            })
+          });
+          if (res.statusCode != 200) {
+            Swal.fire({
+              title: res.error,
+              text: res.message,
+              icon: 'error',
+              confirmButtonText: 'Okay'
+            })
+          }
+          this.loadHistory();
+          this.loading = false;
+        },
+        deleteHistory: async function (item) {
+          let { id } = item;
+          this.history.splice(this.history.indexOf(item), 1)
+          await fetch(`${base_url}/del_history_item?id=${id}`).then(r => r.text()).catch((e) => {
+            Swal.fire({
+              title: 'Error',
+              text: e,
+              icon: 'error',
+              confirmButtonText: 'Okay'
+            })
+          });
+          this.loadHistory();
+        },
+        formatDate(val, format) {
+          return moment(val).format(format);
+        },
+        diff(a, b, c = 'seconds') {
+          let d = moment(a).diff(b, c);
+          return moment.duration(d, c).format();
+        },
+      },
+      watch: {
+        selected(val) {
+          this.selected_test = this.history[val];
+        },
+        loading(val) {
+          if (!val) return
+          this.runTest();
+        },
+        delete_item(val) {
+          if (!val) return
+          Swal.fire({
+            title: 'Error',
+            text: 'want to remove this item?',
+            icon: 'warning',
+            confirmButtonText: 'Okay'
+          })
+        },
+      },
+      inject: {
+        theme: {
+          default: { isDark: false },
+        },
+      },
+    })
+  </script>
+</body>
+
+</html>
