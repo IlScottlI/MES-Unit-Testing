@@ -15,6 +15,7 @@ module.exports = {
             role: "User",
             navigation: "Browse the logbook application URL ->Enter Serial Number->Click on load machine",
             result: "PENDING",
+            reason: null,
             expected_results: "Green, yellow, red should be reflected as  per current status of each department.",
             tested_url: `https://${server_name}/data/perspective/client/Logbook`,
             start_time: Date.now(),

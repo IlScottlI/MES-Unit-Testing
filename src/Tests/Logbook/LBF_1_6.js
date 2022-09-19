@@ -15,6 +15,7 @@ module.exports = {
             role: "User",
             navigation: "Browse the logbook application URL ->Enter Serial Number->Click on load machine->Click on any deparment",
             result: "PENDING",
+            reason: null,
             expected_results: "Each work center in the router is displayed under respective department",
             tested_url: `https://${server_name}/data/perspective/client/Logbook`,
             start_time: Date.now(),

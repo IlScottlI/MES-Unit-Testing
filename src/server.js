@@ -18,6 +18,7 @@ const getTestScripts = () => {
 }
 
 const deleteData = (path) => {
+    console.log(path)
     fs.rmdir(path, { recursive: true }, err => {
         if (err) {
             throw err
@@ -124,7 +125,11 @@ fastify.get('/read_history', (request, response) => {
         files.forEach(function (file) {
             if (!file) return;
             // Do whatever you want to do with the file
-            let obj = JSON.parse(loadData(`./src/TEST_HISTORY/${file}/res.json`));
+            let obj = { id: Number(file), start_time: Number(file) };
+            let read_obj = JSON.parse(loadData(`./src/TEST_HISTORY/${file}/res.json`));
+            if (read_obj) {
+                obj = read_obj;
+            }
             obj.id = Number(file);
             obj.start_time = Number(file);
             res.push(obj);

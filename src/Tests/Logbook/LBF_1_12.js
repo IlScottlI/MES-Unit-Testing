@@ -1,22 +1,22 @@
 const puppeteer = require('puppeteer');
 
 module.exports = {
-    LBF_1_11: async function (obj) {
+    LBF_1_12: async function (obj) {
         let { server_name, tracking_number, badge_id, dir, headless } = obj;
         // Test Case Object
         let test_case = {
             application: "Logbook",
             test_category: "Logbook Functionality",
-            test_description: "Logbook Tasks",
-            test_case: "Clear filter",
-            step: "LBF-1.11",
-            step_description: "1.Enter serial number  2.Click on load machine  3.Click on any department  4. Click on workCenter 5. Click on Clear filter button ",
-            dependencies: "Tasks should be in the filtered mode",
+            test_description: "Barcode gallery",
+            test_case: "Verify  the barcodes for machine serial number and A_Number",
+            step: "LBF-1.12",
+            step_description: "1.Enter serial number 2.click on load machine 3.Click on barcode button.",
+            dependencies: "Active serial number",
             role: "User",
-            navigation: "Browse the logbook application URL ->Enter Serial Number->Click on load machine->Click on any deparment-> Click on WorkCenter ->Click on Clear filter button",
+            navigation: "Browse the logbook application URL ->Enter Serial Number->Click on load machine->Click on barcode button.",
             result: "PENDING",
             reason: null,
-            expected_results: "Filters for all the Grid  will be cleared",
+            expected_results: "Display barcode gallery with selection of code 93 or code 39 formatted barcodes for the machine serial number, A-number. ",
             tested_url: `https://${server_name}/data/perspective/client/Logbook`,
             start_time: Date.now(),
         };
@@ -39,35 +39,23 @@ module.exports = {
             await page.waitForTimeout(1000);
             await page.waitForSelector('[data-component-path="C$0:0$0:0.0:2"]');
             await page.click('[data-component-path="C$0:0$0:0.0:2"]');
-            // 3. Click on any department 
+            // 5. Click on barcode button.
             await page.waitForTimeout(1000);
-            await page.waitForSelector('[data-component-path="C$0:0$0:3:0$0:1[1].0"]');
-            await page.click('[data-component-path="C$0:0$0:3:0$0:1[1].0"]');
-            // 4. Click on a workcenter 
-            await page.waitForTimeout(1000);
-            await page.waitForSelector('[data-component-path="C$0:0$0:3:0$0:3[0].0"]');
-            await page.click('[data-component-path="C$0:0$0:3:0$0:3[0].0"]');
-            // 5. Click on checkbox for the task to be filter.
-            await page.waitForTimeout(1000);
-            await page.waitForSelector('[data-component-path="C$0:0$0:3:1$0:1$0:0[view-cell-1-selection].0:0"]');
-            await page.click('[data-component-path="C$0:0$0:3:1$0:1$0:0[view-cell-1-selection].0:0"]');
-            // 6. Click on Clear filter button
-            await page.waitForTimeout(1000);
-            await page.waitForSelector('[data-component-path="C$0:0$0:3:1.0:0:5"]');
-            await page.click('[data-component-path="C$0:0$0:3:1.0:0:5"]');
-
+            await page.waitForSelector('[data-component-path="C$0:0$0:0.0:3"]');
+            await page.click('[data-component-path="C$0:0$0:0.0:3"]');
 
             // Logic Test
             await page.waitForTimeout(1000);
             let case_1 = await page.evaluate(async () => {
-                return await document.querySelectorAll('[data-component-path="C$0:0$0:3:3.0:1"')[0].style.display;
+                return await document.querySelectorAll('[data-component-path="P0a21wJe6$0:0[0].0:1"] div div')[0].textContent;
             });
             // Validate 
-            if (case_1 != 'none') {
+            if (case_1 == tracking_number) {
                 // Capture Results
                 test_case.result = "PASS";
             } else {
                 test_case.result = "FAIL";
+                test_case.reason = "Barcode Value does not match provided tracking number."
             }
             // Capture Screenshot
             await page.screenshot({ path: `./${dir}/${test_case.application}/${test_case.step}-${tracking_number}.png`, fullPage: true });

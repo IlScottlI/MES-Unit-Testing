@@ -16,6 +16,7 @@ module.exports = {
             role: "User",
             navigation: "Browse the logbook application URL ->Enter Serial Number->Click on load machine",
             result: "PENDING",
+            reason: null,
             expected_results: "All data for the serial number is populated on the Logbook page",
             tested_url: `https://${server_name}/data/perspective/client/Logbook`,
             start_time: Date.now(),
@@ -53,6 +54,7 @@ module.exports = {
             } else {
                 // Capture Results
                 test_case.result = "FAIL";
+                test_case.reason = "Tracking number did not match";
             }
             // Capture Screenshot
             await page.screenshot({ path: `./${dir}/${test_case.application}/${test_case.step}-${tracking_number}.png`, fullPage: true });

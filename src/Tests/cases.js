@@ -11,6 +11,8 @@ const { LBF_1_8 } = require("./Logbook/LBF_1_8.js");
 const { LBF_1_9 } = require("./Logbook/LBF_1_9.js");
 const { LBF_1_10 } = require("./Logbook/LBF_1_10.js");
 const { LBF_1_11 } = require("./Logbook/LBF_1_11.js");
+const { LBF_1_12 } = require("./Logbook/LBF_1_12.js");
+const { LBF_1_13 } = require("./Logbook/LBF_1_13.js");
 
 module.exports = {
     // Logbook Functionality Test Cases
@@ -25,4 +27,6 @@ module.exports = {
     LBF_1_9,
     LBF_1_10,
     LBF_1_11,
+    LBF_1_12,
+    LBF_1_13,
 };

@@ -117,56 +117,32 @@
                     <v-item-group>
                       <v-container>
                         <v-row v-if="selected_test">
-                          <v-col v-for="(val,key) in selected_test.test_results" :key="key" class="d-flex child-flex"
+                          <v-col v-for="(val,key) in selected_test.test_results" class="d-flex child-flex"
                             cols="3">
                             <v-list>
                               <v-list-item-group>
-                                <v-dialog v-model="val.diaglog">
-                                  <template v-slot:activator="{ on, attrs }">
-                                    <v-list-item v-on="on">
-                                      <v-list-item-content>
-                                        <v-list-item-title>{{val.step}} - {{val.test_description}}</v-list-item-title>
-                                        <v-list-item-subtitle class="text--orange">{{val.test_case}}</v-list-item-subtitle>
-                                      </v-list-item-content>
-                                      <v-list-item-action-text :style="val.result == 'PASS'?'color:green':'color:red'">
-                                        {{val.result}}
-                                        <v-icon v-if="val.result == 'PASS'" color="green">mdi-thumb-up</v-icon>
-                                        <v-icon v-else color="red">mdi-thumb-down</v-icon>
-                                      </v-list-item-action-text>
-                                    </v-list-item>
-                                    <v-img style="cursor: pointer;" v-bind="attrs" v-on="on"
-                                      :src="`../../${val.screenshot_path}`" :lazy-src="`../../${val.screenshot_path}`"
-                                      class="grey lighten-2" contain width="300">
-                                      <template v-slot:placeholder>
-                                        <v-row class="fill-height ma-0" align="center" justify="center">
-                                          <v-progress-circular indeterminate color="grey lighten-5">
-                                          </v-progress-circular>
-                                        </v-row>
-                                      </template>
-                                    </v-img>
+                                <v-list-item @click="dialog = true;selected_test_result=val;">
+                                  <v-list-item-content>
+                                    <v-list-item-title>{{val.step}} - {{val.test_description}}</v-list-item-title>
+                                    <v-list-item-subtitle class="text--orange">{{val.test_case}}
+                                    </v-list-item-subtitle>
+                                  </v-list-item-content>
+                                  <v-list-item-action-text :style="val.result == 'PASS'?'color:green':'color:red'">
+                                    {{val.result}}
+                                    <v-icon v-if="val.result == 'PASS'" color="green">mdi-thumb-up</v-icon>
+                                    <v-icon v-else color="red">mdi-thumb-down</v-icon>
+                                  </v-list-item-action-text>
+                                </v-list-item>
+                                <v-img style="cursor: pointer;" :src="`../../${val.screenshot_path}`" @click="dialog = true;selected_test_result=val;"
+                                  :lazy-src="`../../${val.screenshot_path}`" class="grey lighten-2" contain width="300">
+                                  <template v-slot:placeholder>
+                                    <v-row class="fill-height ma-0" align="center" justify="center">
+                                      <v-progress-circular indeterminate color="grey lighten-5">
+                                      </v-progress-circular>
+                                    </v-row>
                                   </template>
-                                  <v-card>
-                                    <v-card-title>
-                                      <ul>
-                                        <li>{{val.test_category}} - {{val.test_description}}</li>
-                                        <ul>
-                                          <li>{{val.step}}</li>
-                                        </ul>
-                                      </ul>
-                                    </v-card-title>
-                                    <v-card-text>
-                                      <v-img :src="`../../${val.screenshot_path}`"
-                                        :lazy-src="`../../${val.screenshot_path}`" class="grey lighten-2" contain
-                                        height="70vh">
-                                    </v-card-text>
-                                    <v-card-actions>
-                                      <v-spacer></v-spacer>
-                                      <v-btn color="green darken-1" text @click="val.diaglog = false">
-                                        CLOSE
-                                      </v-btn>
-                                    </v-card-actions>
-                                  </v-card>
-                                </v-dialog>
+                                </v-img>
+
                               </v-list-item-group>
                             </v-list>
                           </v-col>
@@ -179,6 +155,35 @@
             </v-col>
           </v-row>
         </v-container>
+        <v-dialog v-model="dialog">
+          <v-card v-if="selected_test_result">
+            <v-card-title>
+              <ul>
+                <li>{{selected_test_result.test_category}} - {{selected_test_result.test_description}}</li>
+                <ul>
+                  <li>{{selected_test_result.step}} - {{selected_test_result.test_case}}</li>
+                </ul>
+              </ul>
+            </v-card-title>
+            <v-card-text>
+              <v-img :src="`../../${selected_test_result.screenshot_path}`"
+                :lazy-src="`../../${selected_test_result.screenshot_path}`" class="grey lighten-2" contain
+                height="70vh">
+                <v-btn icon style="margin-top: 30vh;" left absolute @click="prev()" v-if="selected_test.test_results.indexOf(selected_test_result) > 0">
+                  <v-icon>mdi-arrow-left-circle</v-icon>
+                </v-btn>
+                <v-btn icon style="margin-top: 30vh;" right absolute @click="next()" v-if="selected_test.test_results.indexOf(selected_test_result) < (selected_test.test_results.length - 1)">
+                  <v-icon>mdi-arrow-right-circle</v-icon>
+                </v-btn>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="green darken-1" text @click="diaglog = false">
+                CLOSE
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-main>
     </v-app>
   </div>
@@ -202,6 +207,7 @@
           delete_item: null,
           selected: [],
           selected_test: null,
+          selected_test_result: null,
           loading: false,
           tracking_number: '1362946',
           server_name: 'naaccscdatw08.oshkoshglobal.com',
@@ -287,6 +293,14 @@
             })
           });
           this.loadHistory();
+        },
+        next() {
+          let i = this.selected_test.test_results.indexOf(this.selected_test_result);
+          this.selected_test_result = this.selected_test.test_results[i+1];
+        },
+        prev() {
+          let i = this.selected_test.test_results.indexOf(this.selected_test_result);
+          this.selected_test_result = this.selected_test.test_results[i-1];
         },
         formatDate(val, format) {
           return moment(val).format(format);

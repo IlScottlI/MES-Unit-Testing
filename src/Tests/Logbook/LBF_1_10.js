@@ -15,6 +15,7 @@ module.exports = {
             role: "User",
             navigation: "Browse the logbook application URL ->Enter Serial Number->Click on load machine->Click on any deparment-> Click on WorkCenter ->Click on Checkbox",
             result: "PENDING",
+            reason: null,
             expected_results: "Defects,Shortage,Outstanding work grid filtered based on task selected.",
             tested_url: `https://${server_name}/data/perspective/client/Logbook`,
             start_time: Date.now(),

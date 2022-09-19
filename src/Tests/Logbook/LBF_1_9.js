@@ -15,6 +15,7 @@ module.exports = {
             role: "User",
             navigation: "Browse the logbook application URL ->Enter Serial Number->Click on load machine->Click on any deparment-> Click on WorkCenter ->Click on exception Dropdown ,choose the exception .",
             result: "PENDING",
+            reason: null,
             expected_results: "The exception details should appear in the relevant section.",
             tested_url: `https://${server_name}/data/perspective/client/Logbook`,
             start_time: Date.now(),
@@ -79,6 +80,7 @@ module.exports = {
                 test_case.result = "PASS";
             } else {
                 test_case.result = "FAIL";
+                test_case.reason = "Adding an exception task failed due to the modal not closing after the user clicked save.";
             }
             // Capture Screenshot
             await page.screenshot({ path: `./${dir}/${test_case.application}/${test_case.step}-${tracking_number}.png`, fullPage: true });
