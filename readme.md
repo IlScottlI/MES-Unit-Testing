@@ -13,13 +13,11 @@ Install Project dependencies
 
 >   NOTE: Currently Puppteer is not installable while connected to Oshkosh Network
 
-![Installing Error](img\screenshot.png)
 
 ```
 npm install
 ```
 
-![Install Success](img\install_success.png)
 
 
 ## Start node.js development server
